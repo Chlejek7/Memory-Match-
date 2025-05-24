@@ -1,0 +1,1298 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match - AntiDemtia Slayer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            transition: all 0.3s ease;
+        }
+        
+        .card {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+        
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+        }
+        
+        .card-front {
+            background: linear-gradient(145deg, #e91e63, #b71c1c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-back {
+            background: white;
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .difficulty-btn {
+            background: white;
+            border: 2px solid #e91e63;
+            color: #e91e63;
+            transition: all 0.3s ease;
+        }
+        
+        .difficulty-btn:hover, .difficulty-btn.active {
+            background: linear-gradient(145deg, #e91e63, #b71c1c);
+            color: white;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(145deg, #e91e63, #b71c1c);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .primary-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        
+        .secondary-btn {
+            background: white;
+            border: 2px solid #e91e63;
+            color: #e91e63;
+            transition: all 0.3s ease;
+        }
+        
+        .secondary-btn:hover {
+            background: rgba(233, 30, 99, 0.1);
+        }
+        
+        .high-contrast-mode {
+            background: #000;
+            color: #808080;
+        }
+        
+        .high-contrast-mode .card-front {
+            background: #00f0ff;
+            color: #000;
+        }
+        
+        .high-contrast-mode .card-back {
+            background: #000;
+            color: #00f0ff;
+            border: 3px solid #00f0ff;
+        }
+        
+        .high-contrast-mode .primary-btn {
+            background: #00f0ff;
+            color: #000;
+            border: 3px solid #00f0ff;
+        }
+        
+        .high-contrast-mode .secondary-btn {
+            background: #000;
+            color: #00f0ff;
+            border: 3px solid #00f0ff;
+        }
+        
+        .high-contrast-mode .difficulty-btn {
+            background: #000;
+            color: #00f0ff;
+            border: 3px solid #00f0ff;
+        }
+        
+        .high-contrast-mode .difficulty-btn.active {
+            background: #00f0ff;
+            color: #000;
+        }
+        
+        .large-text {
+            font-size: 120%;
+        }
+        
+        .large-text .card-back {
+            font-size: 2.4rem;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .celebrate {
+            animation: celebrate 0.5s ease-in-out;
+        }
+        
+        .screen-reader-text {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
+        .caption-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 100;
+            max-width: 80%;
+            text-align: center;
+        }
+        
+        .accessibility-active {
+            background: #e91e63 !important;
+            color: white !important;
+        }
+        
+        .dev-mode {
+            border: 4px solid #ff9800;
+        }
+        
+        .dev-mode::before {
+            content: "DEV MODE";
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: #ff9800;
+            color: black;
+            padding: 5px 10px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .stats-badge {
+            display: inline-block;
+            background: rgba(233, 30, 99, 0.1);
+            border: 1px solid #e91e63;
+            color: #e91e63;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
+        
+        .apple-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        
+        .apple-gradient {
+            background: linear-gradient(145deg, #e91e63, #b71c1c);
+        }
+        
+        .leaderboard-item {
+            transition: all 0.2s ease;
+        }
+        
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            background: rgba(233, 30, 99, 0.05);
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #eee;
+            padding-top: 16px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus {
+            border-color: #e91e63;
+            outline: none;
+        }
+        
+        .error-message {
+            color: #e91e63;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 16px;
+        }
+        
+        .tab {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab.active {
+            color: #e91e63;
+            border-bottom: 2px solid #e91e63;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container" class="min-h-screen flex flex-col items-center py-8 px-4">
+        <!-- Header -->
+        <header class="w-full max-w-5xl mb-8">
+            <h1 class="text-4xl font-bold text-center mb-2">Memory Match</h1>
+            <p id="game-description" class="text-center text-gray-600">Znajdź wszystkie pary identycznych symboli</p>
+        </header>
+        
+        <!-- Game screens -->
+        <main class="w-full max-w-5xl flex-grow flex flex-col items-center">
+            <!-- Start screen -->
+            <div id="start-screen" class="w-full flex flex-col items-center">
+                <div class="mb-8 text-center w-full max-w-2xl apple-card p-8">
+                    <h2 class="text-3xl font-semibold mb-6">Wybierz poziom trudności</h2>
+                    <div class="flex flex-wrap justify-center gap-3 mb-8">
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium active" data-size="8">4 pary</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="12">6 par</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="16">8 par</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="20">10 par</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="24">12 par</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="36">18 par</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="48">24 pary</button>
+                        <button class="difficulty-btn px-4 py-2 rounded-full text-sm font-medium" data-size="64">32 pary</button>
+                    </div>
+                    <button id="start-game" class="primary-btn px-8 py-3 rounded-full text-lg font-medium">Rozpocznij grę</button>
+                    
+                    <div class="mt-6 flex justify-center gap-3">
+                        <button id="accessibility-toggle" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                            Opcje dostępności
+                        </button>
+                        <button id="dev-mode-toggle" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                            Tryb developerski
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="accessibility-panel" class="w-full max-w-2xl apple-card p-6 mb-8 hidden">
+                    <h3 class="text-xl font-semibold mb-4">Opcje dostępności</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button id="toggle-contrast" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                            Wysoki kontrast
+                        </button>
+                        <button id="toggle-large-text" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                            </svg>
+                            Powiększony tekst
+                        </button>
+                        <button id="toggle-narrator" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                            Narrator
+                        </button>
+                        <button id="toggle-captions" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                            </svg>
+                            Napisy
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="dev-panel" class="w-full max-w-2xl apple-card p-6 mb-8 hidden">
+                    <h3 class="text-xl font-semibold mb-4">Tryb developerski</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button id="reveal-all" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Odkryj wszystkie karty
+                        </button>
+                        <button id="auto-solve" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Automatyczne rozwiązanie
+                        </button>
+                        <button id="test-win" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Testuj ekran wygranej
+                        </button>
+                        <button id="reset-stats" class="secondary-btn px-4 py-3 rounded-full text-sm font-medium flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Resetuj statystyki
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-4 w-full max-w-2xl">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">Najlepsze wyniki</h3>
+                    <div class="apple-card p-4">
+                        <div class="tab-container">
+                            <div class="tab active" data-tab="all">Wszystkie</div>
+                            <div class="tab" data-tab="easy">Łatwe (4-6 par)</div>
+                            <div class="tab" data-tab="medium">Średnie (8-12 par)</div>
+                            <div class="tab" data-tab="hard">Trudne (18-32 pary)</div>
+                        </div>
+                        <div id="leaderboard-all" class="tab-content active">
+                            <p class="text-center text-gray-500">Brak zapisanych wyników</p>
+                        </div>
+                        <div id="leaderboard-easy" class="tab-content">
+                            <p class="text-center text-gray-500">Brak zapisanych wyników</p>
+                        </div>
+                        <div id="leaderboard-medium" class="tab-content">
+                            <p class="text-center text-gray-500">Brak zapisanych wyników</p>
+                        </div>
+                        <div id="leaderboard-hard" class="tab-content">
+                            <p class="text-center text-gray-500">Brak zapisanych wyników</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game screen -->
+            <div id="game-screen" class="w-full hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 apple-card p-4">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Czas</p>
+                            <p id="timer" class="text-xl font-medium">00:00</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Ruchy</p>
+                            <p id="moves" class="text-xl font-medium">0</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Celność</p>
+                            <p id="accuracy" class="text-xl font-medium">0%</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-4 md:mt-0">
+                        <button id="game-accessibility-toggle" class="secondary-btn px-3 py-1 rounded-full text-sm font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        </button>
+                        <button id="back-to-menu" class="secondary-btn px-4 py-1 rounded-full text-sm font-medium">Powrót do menu</button>
+                    </div>
+                </div>
+                
+                <div id="game-board" class="grid gap-3 mx-auto mb-6"></div>
+                
+                <div id="game-accessibility-panel" class="apple-card p-4 mb-6 hidden">
+                    <h3 class="text-xl font-semibold mb-3">Opcje dostępności</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <button id="game-toggle-contrast" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium">Wysoki kontrast</button>
+                        <button id="game-toggle-large-text" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium">Powiększony tekst</button>
+                        <button id="game-toggle-narrator" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium">Narrator</button>
+                        <button id="game-toggle-captions" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium">Napisy</button>
+                    </div>
+                </div>
+                
+                <div id="caption-box" class="caption-box hidden"></div>
+                <div id="screen-reader-announcer" class="screen-reader-text" aria-live="polite"></div>
+            </div>
+            
+            <!-- End screen -->
+            <div id="end-screen" class="w-full max-w-md hidden">
+                <div class="apple-card p-8 text-center">
+                    <div class="apple-gradient text-white py-6 px-4 rounded-lg mb-6">
+                        <h2 class="text-3xl font-bold mb-2">Gratulacje!</h2>
+                        <p class="text-xl">Znalazłeś wszystkie pary!</p>
+                    </div>
+                    
+                    <div class="mb-6 grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Czas</p>
+                            <p id="final-time" class="text-xl font-medium">00:00</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Ruchy</p>
+                            <p id="final-moves" class="text-xl font-medium">0</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Celność</p>
+                            <p id="final-accuracy" class="text-xl font-medium">0%</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Wynik</p>
+                            <p id="final-score" class="text-xl font-medium">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="player-name" class="block text-left mb-2 font-medium">Twoje imię:</label>
+                        <input type="text" id="player-name" class="w-full px-4 py-2 border rounded-lg mb-4" placeholder="Wpisz swoje imię">
+                        <button id="save-score" class="primary-btn px-6 py-2 rounded-full text-lg font-medium w-full">Zapisz wynik</button>
+                    </div>
+                    
+                    <button id="play-again" class="secondary-btn px-6 py-2 rounded-full text-lg font-medium w-full">Zagraj ponownie</button>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="w-full max-w-5xl mt-8 text-center text-gray-500 text-sm">
+            <p>Memory Match by LMT &copy; 2025-2026</p>
+        </footer>
+    </div>
+    
+    <!-- Dev Mode Login Modal -->
+    <div id="dev-login-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold">Logowanie do trybu developerskiego</h3>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="dev-login">Login:</label>
+                    <input type="text" id="dev-login" placeholder="Wprowadź login">
+                </div>
+                <div class="input-group">
+                    <label for="dev-password">Hasło:</label>
+                    <input type="password" id="dev-password" placeholder="Wprowadź hasło">
+                </div>
+                <div id="dev-login-error" class="error-message hidden">Nieprawidłowy login lub hasło</div>
+            </div>
+            <div class="modal-footer">
+                <button id="dev-login-cancel" class="secondary-btn px-4 py-2 rounded-full text-sm font-medium">Anuluj</button>
+                <button id="dev-login-submit" class="primary-btn px-4 py-2 rounded-full text-sm font-medium">Zaloguj</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game state
+            const state = {
+                gameSize: 8,
+                cards: [],
+                flippedCards: [],
+                matchedPairs: 0,
+                moves: 0,
+                totalFlips: 0, // Total number of card flips for accuracy calculation
+                startTime: null,
+                timer: null,
+                gameActive: false,
+                devMode: false,
+                devLoggedIn: false,
+                accessibilityOptions: {
+                    highContrast: false,
+                    largeText: false,
+                    narrator: false,
+                    captions: false
+                },
+                leaderboard: JSON.parse(localStorage.getItem('memoryGameLeaderboard')) || []
+            };
+
+            // Dev credentials
+            const DEV_LOGIN = "LMT_DEV2025";
+            const DEV_PASSWORD = "DEVMM2025";
+
+            // DOM elements
+            const startScreen = document.getElementById('start-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const endScreen = document.getElementById('end-screen');
+            const gameBoard = document.getElementById('game-board');
+            const timerDisplay = document.getElementById('timer');
+            const movesDisplay = document.getElementById('moves');
+            const accuracyDisplay = document.getElementById('accuracy');
+            const finalTimeDisplay = document.getElementById('final-time');
+            const finalMovesDisplay = document.getElementById('final-moves');
+            const finalAccuracyDisplay = document.getElementById('final-accuracy');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+            const startGameButton = document.getElementById('start-game');
+            const backToMenuButton = document.getElementById('back-to-menu');
+            const playAgainButton = document.getElementById('play-again');
+            const saveScoreButton = document.getElementById('save-score');
+            const playerNameInput = document.getElementById('player-name');
+            const leaderboardTabs = document.querySelectorAll('.tab');
+            const leaderboardContents = document.querySelectorAll('.tab-content');
+            const accessibilityToggle = document.getElementById('accessibility-toggle');
+            const accessibilityPanel = document.getElementById('accessibility-panel');
+            const gameAccessibilityToggle = document.getElementById('game-accessibility-toggle');
+            const gameAccessibilityPanel = document.getElementById('game-accessibility-panel');
+            const toggleContrastButton = document.getElementById('toggle-contrast');
+            const toggleLargeTextButton = document.getElementById('toggle-large-text');
+            const toggleNarratorButton = document.getElementById('toggle-narrator');
+            const toggleCaptionsButton = document.getElementById('toggle-captions');
+            const gameToggleContrastButton = document.getElementById('game-toggle-contrast');
+            const gameToggleLargeTextButton = document.getElementById('game-toggle-large-text');
+            const gameToggleNarratorButton = document.getElementById('game-toggle-narrator');
+            const gameToggleCaptionsButton = document.getElementById('game-toggle-captions');
+            const screenReaderAnnouncer = document.getElementById('screen-reader-announcer');
+            const captionBox = document.getElementById('caption-box');
+            const gameDescription = document.getElementById('game-description');
+            const devModeToggle = document.getElementById('dev-mode-toggle');
+            const devPanel = document.getElementById('dev-panel');
+            const revealAllButton = document.getElementById('reveal-all');
+            const autoSolveButton = document.getElementById('auto-solve');
+            const testWinButton = document.getElementById('test-win');
+            const resetStatsButton = document.getElementById('reset-stats');
+            
+            // Dev login modal elements
+            const devLoginModal = document.getElementById('dev-login-modal');
+            const devLoginInput = document.getElementById('dev-login');
+            const devPasswordInput = document.getElementById('dev-password');
+            const devLoginSubmit = document.getElementById('dev-login-submit');
+            const devLoginCancel = document.getElementById('dev-login-cancel');
+            const devLoginError = document.getElementById('dev-login-error');
+
+            // Symbols for cards
+            const symbols = [
+                '★', '♦', '🦆', '♠', '♣', '⚡', '☀', '☁', '☂', '☃', '☄', '☕',
+                '☘', '☢', '☮', '☯', '☸', '♩', '🤌', '💀', '♬', '✓', '✈', '✉',
+                '✌', '✏', '❄', '❤', '⚽', '⚾', '⛄', '⛅'
+            ];
+
+            // Initialize game
+            function initGame() {
+                updateLeaderboard();
+                
+                // Set up difficulty buttons
+                difficultyButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        difficultyButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        state.gameSize = parseInt(button.dataset.size);
+                    });
+                });
+                
+                // Start game button
+                startGameButton.addEventListener('click', startGame);
+                
+                // Back to menu button
+                backToMenuButton.addEventListener('click', () => {
+                    clearInterval(state.timer);
+                    showScreen('start');
+                });
+                
+                // Play again button
+                playAgainButton.addEventListener('click', () => {
+                    showScreen('start');
+                });
+                
+                // Save score button
+                saveScoreButton.addEventListener('click', saveScore);
+                
+                // Accessibility toggle
+                accessibilityToggle.addEventListener('click', () => {
+                    accessibilityPanel.classList.toggle('hidden');
+                    devPanel.classList.add('hidden');
+                    announce('Panel dostępności ' + (accessibilityPanel.classList.contains('hidden') ? 'zamknięty' : 'otwarty'));
+                });
+                
+                // Game accessibility toggle
+                gameAccessibilityToggle.addEventListener('click', () => {
+                    gameAccessibilityPanel.classList.toggle('hidden');
+                    announce('Panel dostępności ' + (gameAccessibilityPanel.classList.contains('hidden') ? 'zamknięty' : 'otwarty'));
+                });
+                
+                // Dev mode toggle
+                devModeToggle.addEventListener('click', () => {
+                    if (state.devLoggedIn) {
+                        toggleDevPanel();
+                    } else {
+                        showDevLoginModal();
+                    }
+                });
+                
+                // Accessibility options
+                toggleContrastButton.addEventListener('click', () => toggleHighContrast(toggleContrastButton));
+                toggleLargeTextButton.addEventListener('click', () => toggleLargeText(toggleLargeTextButton));
+                toggleNarratorButton.addEventListener('click', () => toggleNarrator(toggleNarratorButton));
+                toggleCaptionsButton.addEventListener('click', () => toggleCaptions(toggleCaptionsButton));
+                
+                gameToggleContrastButton.addEventListener('click', () => toggleHighContrast(gameToggleContrastButton));
+                gameToggleLargeTextButton.addEventListener('click', () => toggleLargeText(gameToggleLargeTextButton));
+                gameToggleNarratorButton.addEventListener('click', () => toggleNarrator(gameToggleNarratorButton));
+                gameToggleCaptionsButton.addEventListener('click', () => toggleCaptions(gameToggleCaptionsButton));
+                
+                // Dev mode buttons
+                revealAllButton.addEventListener('click', revealAllCards);
+                autoSolveButton.addEventListener('click', autoSolve);
+                testWinButton.addEventListener('click', testWinScreen);
+                resetStatsButton.addEventListener('click', resetStats);
+                
+                // Dev login modal
+                devLoginSubmit.addEventListener('click', handleDevLogin);
+                devLoginCancel.addEventListener('click', hideDevLoginModal);
+                
+                // Leaderboard tabs
+                leaderboardTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabId = tab.dataset.tab;
+                        
+                        // Update active tab
+                        leaderboardTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        
+                        // Show corresponding content
+                        leaderboardContents.forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        document.getElementById(`leaderboard-${tabId}`).classList.add('active');
+                    });
+                });
+                
+                // Apply saved accessibility settings if any
+                loadAccessibilitySettings();
+            }
+            
+            // Toggle dev panel
+            function toggleDevPanel() {
+                devPanel.classList.toggle('hidden');
+                accessibilityPanel.classList.add('hidden');
+                if (!devPanel.classList.contains('hidden')) {
+                    document.body.classList.add('dev-mode');
+                } else {
+                    document.body.classList.remove('dev-mode');
+                }
+            }
+            
+            // Show dev login modal
+            function showDevLoginModal() {
+                devLoginModal.classList.remove('hidden');
+                devLoginInput.value = '';
+                devPasswordInput.value = '';
+                devLoginError.classList.add('hidden');
+                devLoginInput.focus();
+            }
+            
+            // Hide dev login modal
+            function hideDevLoginModal() {
+                devLoginModal.classList.add('hidden');
+            }
+            
+            // Handle dev login
+            function handleDevLogin() {
+                const login = devLoginInput.value;
+                const password = devPasswordInput.value;
+                
+                if (login === DEV_LOGIN && password === DEV_PASSWORD) {
+                    state.devLoggedIn = true;
+                    hideDevLoginModal();
+                    toggleDevPanel();
+                    announce('Zalogowano do trybu developerskiego');
+                } else {
+                    devLoginError.classList.remove('hidden');
+                    devLoginError.textContent = 'Nieprawidłowy login lub hasło';
+                }
+            }
+            
+            // Load saved accessibility settings
+            function loadAccessibilitySettings() {
+                const savedSettings = JSON.parse(localStorage.getItem('memoryGameAccessibility')) || {};
+                
+                if (savedSettings.highContrast) toggleHighContrast(toggleContrastButton);
+                if (savedSettings.largeText) toggleLargeText(toggleLargeTextButton);
+                if (savedSettings.narrator) toggleNarrator(toggleNarratorButton);
+                if (savedSettings.captions) toggleCaptions(toggleCaptionsButton);
+            }
+            
+            // Save accessibility settings
+            function saveAccessibilitySettings() {
+                localStorage.setItem('memoryGameAccessibility', JSON.stringify(state.accessibilityOptions));
+            }
+            
+            // Start the game
+            function startGame() {
+                state.cards = [];
+                state.flippedCards = [];
+                state.matchedPairs = 0;
+                state.moves = 0;
+                state.totalFlips = 0;
+                state.gameActive = true;
+                
+                // Create cards
+                createCards();
+                
+                // Update display
+                movesDisplay.textContent = '0';
+                accuracyDisplay.textContent = '0%';
+                
+                // Start timer
+                state.startTime = Date.now();
+                state.timer = setInterval(updateTimer, 1000);
+                updateTimer();
+                
+                // Show game screen
+                showScreen('game');
+                
+                announce(`Gra rozpoczęta. Poziom trudności: ${state.gameSize / 2} par.`);
+            }
+            
+            // Create cards for the game
+            function createCards() {
+                gameBoard.innerHTML = '';
+                
+                // Determine grid size based on card count
+                let columns;
+                if (state.gameSize <= 16) columns = 4;
+                else if (state.gameSize <= 36) columns = 6;
+                else columns = 8;
+                
+                gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+                
+                // Calculate card size based on columns
+                const cardSize = Math.min(80, Math.floor((window.innerWidth - 40) / columns));
+                
+                // Create pairs of cards
+                const pairsCount = state.gameSize / 2;
+                const selectedSymbols = symbols.slice(0, pairsCount);
+                
+                // Create array with pairs
+                const cardSymbols = [...selectedSymbols, ...selectedSymbols];
+                
+                // Shuffle cards
+                for (let i = cardSymbols.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cardSymbols[i], cardSymbols[j]] = [cardSymbols[j], cardSymbols[i]];
+                }
+                
+                // Create card elements
+                cardSymbols.forEach((symbol, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.width = `${cardSize}px`;
+                    card.style.height = `${cardSize}px`;
+                    card.dataset.index = index;
+                    card.dataset.symbol = symbol;
+                    card.dataset.flips = 0; // Track how many times this card was flipped
+                    card.setAttribute('tabindex', '0');
+                    card.setAttribute('role', 'button');
+                    card.setAttribute('aria-label', `Karta ${index + 1}`);
+                    
+                    card.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-front"></div>
+                            <div class="card-back">${symbol}</div>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => flipCard(card));
+                    card.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            flipCard(card);
+                        }
+                    });
+                    
+                    gameBoard.appendChild(card);
+                    state.cards.push(card);
+                });
+            }
+            
+            // Flip a card
+            function flipCard(card) {
+                // Ignore if game not active or card already flipped/matched
+                if (!state.gameActive || 
+                    state.flippedCards.length >= 2 || 
+                    card.classList.contains('flipped') || 
+                    card.classList.contains('matched')) {
+                    return;
+                }
+                
+                // Flip the card
+                card.classList.add('flipped');
+                state.flippedCards.push(card);
+                state.totalFlips++;
+                
+                // Increment card flip counter
+                card.dataset.flips = parseInt(card.dataset.flips) + 1;
+                
+                const symbol = card.dataset.symbol;
+                announce(`Odkryto kartę: ${symbol}`);
+                
+                // Check for match if two cards are flipped
+                if (state.flippedCards.length === 2) {
+                    state.moves++;
+                    movesDisplay.textContent = state.moves;
+                    updateAccuracy();
+                    
+                    const [card1, card2] = state.flippedCards;
+                    
+                    if (card1.dataset.symbol === card2.dataset.symbol) {
+                        // Match found
+                        setTimeout(() => {
+                            card1.classList.add('matched');
+                            card2.classList.add('matched');
+                            card1.classList.add('celebrate');
+                            card2.classList.add('celebrate');
+                            
+                            setTimeout(() => {
+                                card1.classList.remove('celebrate');
+                                card2.classList.remove('celebrate');
+                            }, 500);
+                            
+                            state.matchedPairs++;
+                            announce(`Para znaleziona! Symbol: ${card1.dataset.symbol}`);
+                            
+                            // Check if game is complete
+                            if (state.matchedPairs === state.gameSize / 2) {
+                                endGame();
+                            }
+                            
+                            state.flippedCards = [];
+                        }, 500);
+                    } else {
+                        // No match
+                        setTimeout(() => {
+                            card1.classList.remove('flipped');
+                            card2.classList.remove('flipped');
+                            state.flippedCards = [];
+                            announce('Brak pary, karty odwrócone z powrotem');
+                        }, 1000);
+                    }
+                }
+            }
+            
+            // Update accuracy display
+            function updateAccuracy() {
+                // Perfect accuracy would be exactly 2 flips per pair found
+                const perfectFlips = state.matchedPairs * 2;
+                const accuracy = state.totalFlips > 0 ? Math.round((perfectFlips / state.totalFlips) * 100) : 0;
+                accuracyDisplay.textContent = `${accuracy}%`;
+                return accuracy;
+            }
+            
+            // End the game
+            function endGame() {
+                state.gameActive = false;
+                clearInterval(state.timer);
+                
+                const timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                const accuracy = updateAccuracy();
+                const score = calculateScore(timeElapsed, state.moves, state.gameSize, accuracy);
+                
+                finalTimeDisplay.textContent = formatTime(timeElapsed);
+                finalMovesDisplay.textContent = state.moves;
+                finalAccuracyDisplay.textContent = `${accuracy}%`;
+                finalScoreDisplay.textContent = score;
+                
+                setTimeout(() => {
+                    showScreen('end');
+                    announce('Gratulacje! Znalazłeś wszystkie pary! Twój wynik to ' + score + ' punktów.');
+                }, 1000);
+            }
+            
+            // Calculate score
+            function calculateScore(time, moves, gameSize, accuracy) {
+                // Base score depends on difficulty
+                const baseScore = gameSize * 10;
+                
+                // Speed bonus (faster = more points)
+                const expectedTime = gameSize * 3; // Expected seconds per difficulty
+                const timeBonus = Math.max(0, expectedTime - time) * 2;
+                
+                // Accuracy bonus
+                const accuracyBonus = accuracy * 2;
+                
+                // Penalty for excessive moves
+                const expectedMoves = gameSize / 2 * 2; // Perfect play
+                const movesPenalty = Math.max(0, moves - expectedMoves) * 5;
+                
+                // Calculate final score (minimum 10 points)
+                return Math.max(10, baseScore + timeBonus + accuracyBonus - movesPenalty);
+            }
+            
+            // Save score to leaderboard
+            function saveScore() {
+                const playerName = playerNameInput.value.trim() || 'Gracz';
+                const timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                const accuracy = updateAccuracy();
+                const score = calculateScore(timeElapsed, state.moves, state.gameSize, accuracy);
+                
+                // Don't save scores from dev mode
+                if (state.devMode) {
+                    announce('Wynik z trybu developerskiego nie został zapisany.');
+                    showScreen('start');
+                    return;
+                }
+                
+                const newScore = {
+                    name: playerName,
+                    score: score,
+                    time: timeElapsed,
+                    moves: state.moves,
+                    accuracy: accuracy,
+                    difficulty: state.gameSize / 2,
+                    date: new Date().toISOString()
+                };
+                
+                state.leaderboard.push(newScore);
+                state.leaderboard.sort((a, b) => b.score - a.score);
+                
+                localStorage.setItem('memoryGameLeaderboard', JSON.stringify(state.leaderboard));
+                
+                updateLeaderboard();
+                showScreen('start');
+                announce('Wynik zapisany. Powrót do menu głównego.');
+            }
+            
+            // Update leaderboard display
+            function updateLeaderboard() {
+                // Define difficulty categories
+                const categories = {
+                    all: state.leaderboard,
+                    easy: state.leaderboard.filter(entry => entry.difficulty <= 6),
+                    medium: state.leaderboard.filter(entry => entry.difficulty > 6 && entry.difficulty <= 12),
+                    hard: state.leaderboard.filter(entry => entry.difficulty > 12)
+                };
+                
+                // Update each category tab
+                Object.keys(categories).forEach(category => {
+                    const entries = categories[category];
+                    const container = document.getElementById(`leaderboard-${category}`);
+                    
+                    if (entries.length === 0) {
+                        container.innerHTML = '<p class="text-center text-gray-500">Brak zapisanych wyników</p>';
+                        return;
+                    }
+                    
+                    let html = '<ul class="divide-y">';
+                    entries.slice(0, 10).forEach((entry, index) => {
+                        const formattedTime = formatTime(entry.time);
+                        
+                        html += `
+                            <li class="py-3 flex justify-between items-center leaderboard-item">
+                                <div class="flex items-center">
+                                    <span class="font-bold text-xl mr-3">${index + 1}</span>
+                                    <div>
+                                        <span class="font-medium block">${entry.name}</span>
+                                        <div class="flex flex-wrap mt-1">
+                                            <span class="stats-badge">${entry.difficulty} par</span>
+                                            <span class="stats-badge">${formattedTime}</span>
+                                            <span class="stats-badge">${entry.accuracy}% celności</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-xl">${entry.score} pkt</span>
+                            </li>
+                        `;
+                    });
+                    html += '</ul>';
+                    
+                    container.innerHTML = html;
+                });
+            }
+            
+            // Update timer display
+            function updateTimer() {
+                const timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                timerDisplay.textContent = formatTime(timeElapsed);
+            }
+            
+            // Format time as MM:SS
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            
+            // Show specific screen
+            function showScreen(screen) {
+                startScreen.classList.add('hidden');
+                gameScreen.classList.add('hidden');
+                endScreen.classList.add('hidden');
+                
+                switch (screen) {
+                    case 'start':
+                        startScreen.classList.remove('hidden');
+                        break;
+                    case 'game':
+                        gameScreen.classList.remove('hidden');
+                        break;
+                    case 'end':
+                        endScreen.classList.remove('hidden');
+                        break;
+                }
+            }
+            
+            // Accessibility functions
+            function toggleHighContrast(button) {
+                state.accessibilityOptions.highContrast = !state.accessibilityOptions.highContrast;
+                document.body.classList.toggle('high-contrast-mode', state.accessibilityOptions.highContrast);
+                toggleButtonActive(button, state.accessibilityOptions.highContrast);
+                toggleButtonActive(toggleContrastButton, state.accessibilityOptions.highContrast);
+                toggleButtonActive(gameToggleContrastButton, state.accessibilityOptions.highContrast);
+                announce('Wysoki kontrast ' + (state.accessibilityOptions.highContrast ? 'włączony' : 'wyłączony'));
+                saveAccessibilitySettings();
+            }
+            
+            function toggleLargeText(button) {
+                state.accessibilityOptions.largeText = !state.accessibilityOptions.largeText;
+                document.body.classList.toggle('large-text', state.accessibilityOptions.largeText);
+                toggleButtonActive(button, state.accessibilityOptions.largeText);
+                toggleButtonActive(toggleLargeTextButton, state.accessibilityOptions.largeText);
+                toggleButtonActive(gameToggleLargeTextButton, state.accessibilityOptions.largeText);
+                announce('Powiększony tekst ' + (state.accessibilityOptions.largeText ? 'włączony' : 'wyłączony'));
+                saveAccessibilitySettings();
+            }
+            
+            function toggleNarrator(button) {
+                state.accessibilityOptions.narrator = !state.accessibilityOptions.narrator;
+                toggleButtonActive(button, state.accessibilityOptions.narrator);
+                toggleButtonActive(toggleNarratorButton, state.accessibilityOptions.narrator);
+                toggleButtonActive(gameToggleNarratorButton, state.accessibilityOptions.narrator);
+                announce('Narrator ' + (state.accessibilityOptions.narrator ? 'włączony' : 'wyłączony'));
+                saveAccessibilitySettings();
+            }
+            
+            function toggleCaptions(button) {
+                state.accessibilityOptions.captions = !state.accessibilityOptions.captions;
+                captionBox.classList.toggle('hidden', !state.accessibilityOptions.captions);
+                toggleButtonActive(button, state.accessibilityOptions.captions);
+                toggleButtonActive(toggleCaptionsButton, state.accessibilityOptions.captions);
+                toggleButtonActive(gameToggleCaptionsButton, state.accessibilityOptions.captions);
+                announce('Napisy ' + (state.accessibilityOptions.captions ? 'włączone' : 'wyłączone'));
+                saveAccessibilitySettings();
+            }
+            
+            function toggleButtonActive(button, isActive) {
+                if (isActive) {
+                    button.classList.add('accessibility-active');
+                } else {
+                    button.classList.remove('accessibility-active');
+                }
+            }
+            
+            // Screen reader announcer
+            function announce(message) {
+                screenReaderAnnouncer.textContent = message;
+                
+                if (state.accessibilityOptions.captions) {
+                    captionBox.textContent = message;
+                    captionBox.classList.remove('hidden');
+                    
+                    // Hide captions after 5 seconds
+                    setTimeout(() => {
+                        if (captionBox.textContent === message) {
+                            captionBox.classList.add('hidden');
+                        }
+                    }, 5000);
+                }
+                
+                // Use speech synthesis if available and narrator is enabled
+                if (window.speechSynthesis && state.accessibilityOptions.narrator) {
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.lang = 'pl-PL';
+                    speechSynthesis.speak(utterance);
+                }
+            }
+            
+            // Developer mode functions
+            function revealAllCards() {
+                if (!state.gameActive) return;
+                
+                state.cards.forEach(card => {
+                    card.classList.add('flipped');
+                });
+                
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    state.cards.forEach(card => {
+                        if (!card.classList.contains('matched')) {
+                            card.classList.remove('flipped');
+                        }
+                    });
+                }, 3000);
+                
+                announce('Wszystkie karty tymczasowo odkryte w trybie developerskim');
+            }
+            
+            function autoSolve() {
+                if (!state.gameActive) return;
+                
+                state.devMode = true;
+                document.body.classList.add('dev-mode');
+                
+                // Create a map of symbols to cards
+                const symbolMap = {};
+                state.cards.forEach(card => {
+                    const symbol = card.dataset.symbol;
+                    if (!symbolMap[symbol]) {
+                        symbolMap[symbol] = [];
+                    }
+                    symbolMap[symbol].push(card);
+                });
+                
+                // Solve pairs with delay
+                let delay = 300;
+                Object.values(symbolMap).forEach(pair => {
+                    setTimeout(() => {
+                        flipCard(pair[0]);
+                        setTimeout(() => {
+                            flipCard(pair[1]);
+                        }, 300);
+                    }, delay);
+                    delay += 800;
+                });
+                
+                announce('Automatyczne rozwiązanie w trybie developerskim');
+            }
+            
+            function testWinScreen() {
+                state.devMode = true;
+                document.body.classList.add('dev-mode');
+                
+                // Set some sample values
+                state.moves = 20;
+                state.totalFlips = 30;
+                state.startTime = Date.now() - 60000; // 1 minute ago
+                
+                endGame();
+                announce('Testowanie ekranu wygranej w trybie developerskim');
+            }
+            
+            function resetStats() {
+                if (confirm('Czy na pewno chcesz zresetować wszystkie statystyki i wyniki?')) {
+                    localStorage.removeItem('memoryGameLeaderboard');
+                    state.leaderboard = [];
+                    updateLeaderboard();
+                    announce('Statystyki zresetowane');
+                }
+            }
+            
+            // Initialize the game
+            initGame();
+            
+            // Handle keyboard events for modal
+            document.addEventListener('keydown', (e) => {
+                if (!devLoginModal.classList.contains('hidden')) {
+                    if (e.key === 'Escape') {
+                        hideDevLoginModal();
+                    } else if (e.key === 'Enter') {
+                        handleDevLogin();
+                    }
+                }
+            });
+            
+            // Handle dev login form submission
+            devLoginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    devPasswordInput.focus();
+                }
+            });
+            
+            devPasswordInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    handleDevLogin();
+                }
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'943d9840d52ec06f',t:'MTc0NzkzMDM0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
